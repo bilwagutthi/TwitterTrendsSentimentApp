@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title> Current twitter trends sentiment analysis</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script> 
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="{{url_for('static', filename='jquery.js') }}">\x3C/script>')</script>
+    <script src="https://cdn.syncfusion.com/ej2/dist/ej2.min.js" type="text/javascript"></script>
+</head>
+<body>
+    <div class="jumbotron text-center bg-dark text-white my-3 mx-3">
+        <h1>Current Twitter Trends Sentiment Analysis</h1>
+    </div>
+    <div class="container-fluid bg-dark text-white my-3 mx-3">
+        <div class="row" style="align-items: center">
+            <div class="col"></div>
+            <div class="col">
+                <div class="form-group">
+                    <label for="noMax">Enter number of tweets to consider </label>
+                    <input type="text" class="form-control" id="noMax" placeholder="Number of tweets (Between 5 to 100)">
+                    <button type="button" id="getResults"class="btn btn-light">Go!</button>
+                </div>
+            </div>
+            <div class="col"></div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <div id="spinner" class="spinner-border text-info" style='margin:auto;display: block; '></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <p id='chart'> </p>
+            </div>
+        </div>
+    </div>
+    <script>
+        var $loading = $('#spinner').hide();
+        $(document).ajaxStart(function () {$loading.show();}).ajaxStop(function () {$loading.hide();});
+        $('document').ready( function (){
+            $('#getResults').click( function(){
+                var num= $('#noMax').val();
+                var callDetails={
+                    type:'POST',
+                    url:'/trends',
+                    data:{
+                        'count':num
+                    }
+                };
+                $.ajax(callDetails).done( function (response){
+                    console.log('Done with ajax call');
+                    var i;
+                    var json=Object.entries(response);
+                    var positive= new Array();
+                    var negative= new Array();
+                    var neutral= new Array();
+                    
+                    json.forEach(element =>{
+                        console.log(element[1].pos/num);
+                        console.log(Math.round(( element[1].pos/num)*100));
+                        positive.push({x:element[0],y:Math.round(( element[1].pos/num)*100)});
+                        negative.push({x:element[0],y:Math.round(( element[1].neg/num)*100)});
+                        neutral.push({x:element[0],y:Math.round(( element[1].neu/num)*100)});
+                    });
+                    console.log(positive,neutral,negative);
+
+                    var chart = new ej.charts.Chart({
+                        primaryXAxis: {valueType: 'Category',majorGridLines: { width: 0 }},
+                        chartArea: {border: { width: 0 }},
+                        primaryYAxis:{ lineStyle: { width: 0}, majorTickLines: {width: 0}, labelFormat: '{value}%', edgeLabelPlacement: 'Shift'},
+        //Initializing Chart Series
+        series: [
+            {
+                type: 'StackingBar',
+                dataSource: positive ,
+                name: 'Positive',
+                xName: 'x', width: 2,
+                yName: 'y'
+            },
+            {
+                type: 'StackingBar',
+                dataSource: negative,
+                name: 'Negative',
+                xName: 'x', width: 2,
+                yName: 'y'
+            },
+            {
+                type: 'StackingBar',
+                dataSource: neutral,
+                name: 'Neutral', width: 2,
+                xName: 'x',
+                yName: 'y'
+ 
+            }
+        ],
+ 
+        //Initializing Chart title
+        title: 'Current Trends Sentiment',
+        tooltip: {
+            enable: true
+        },
+});
+
+                    chart.appendTo("#chart");
+
+                    });
+            });
+        });
+        
+    </script> 
+</body>
+
+</html>
